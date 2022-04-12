@@ -89,9 +89,10 @@ module.exports = function(fastify, opts, next) {
       fastify.pg.connect(onConnect)
 
       function onConnect(err, client, release) {
-        if (err) return reply.code(500).send({"error": "Database connection error."})
+        if (err) return reply.code(500).send({"error": `Database connection error: ${err.message}`})
 
-        client.query(sql(request.params, request.query), function onResult(
+        const mvt_sql = sql(request.params, request.query)
+        client.query(mvt_sql, function onResult(
           err,
           result
         ) {
@@ -102,6 +103,7 @@ module.exports = function(fastify, opts, next) {
             const mvt = result.rows[0].mvt
             if (mvt.length === 0) {
               reply.code(204)
+              console.log(`no data from ${mvt_sql}`)
             }
             reply.header('Content-Type', 'application/x-protobuf').send(mvt)
           }
